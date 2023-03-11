@@ -25,7 +25,7 @@ const UserSchema = mongoose.Schema(
       type: String,
       required: true,
       max: 1024,
-      min: 6,
+      minLength: 6,
     },
     profilePicture: {
       type: String,
@@ -59,9 +59,22 @@ UserSchema.pre("save", async function (next) {
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
-  // const hashedPass = await bcrypt.hash(req.body.password, salt);
-  // req.body.password = hashedPass;
 });
 
-const UserModel = mongoose.model("User", UserSchema);
+// when logout, remove the salt
+UserSchema.statics.login = async function (email, password) {
+  const user = await this.findOne({ email }); // find email...
+  if (user) {
+    //... and search the user
+    const auth = await bcrypt.compare(password, user.password); // compare password and user.password
+    if (auth) {
+      return user;
+    }
+    throw Error("incorrect password");
+  }
+  throw Error("incorrect email");
+};
+
+const UserModel = mongoose.models.User || mongoose.model("User", UserSchema);
+// const UserModel = mongoose.model("User", UserSchema);
 export default UserModel;

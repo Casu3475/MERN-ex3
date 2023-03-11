@@ -1,8 +1,10 @@
 import express from "express";
 import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import cors from "cors";
+// import cors from "cors";
+import { checkUser, requiredAuth } from "./middleware/AuthMiddleware.js";
 
 // INDEX --> ROUTES --> controllers --> models --> DB
 import UserRoutes from "./routes/UserRoutes.js";
@@ -18,8 +20,15 @@ const app = express();
 // middleware
 app.use(bodyParser.json({ limit: "50mb", extended: true }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
+app.use(cookieParser());
 
 dotenv.config();
+
+// JWT
+app.get("*", checkUser); // a chaque connexion, tu me checkes l'utilisateur
+app.get("/jwtid", requiredAuth, (req, res) => {
+  res.status(200).send(res.locals.user._id);
+});
 
 // variables
 // const PORT = process.env.PORT;
